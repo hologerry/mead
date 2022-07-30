@@ -32,15 +32,21 @@ def create_json_files(extracted_folder="../MEAD_extracted", processed_folder="..
     video_files = []
 
     id_folders = sorted(os.listdir(os.path.join(extracted_folder)))
-    for id_name in tqdm(id_folders, desc="Creating Json files", leave=False):
+    for id_name in id_folders:
         id_path = os.path.join(extracted_folder, id_name)
-        if not os.path.isdir(id_path):
-            continue
-        files = sorted(os.listdir(id_path))
-        for f in tqdm(files, desc=id_path, leave=True):
-            if "mp4" in f:
-                f_path = os.path.join(id_name, f)
-                video_files.append(f_path)
+        angle_folders = sorted(os.listdir(id_path))
+        for angle_folder in angle_folders:
+            angle_path = os.path.join(id_path, angle_folder)
+            expression_folder = os.listdir(angle_path)
+            for expression_name in expression_folder:
+                expression_path = os.path.join(angle_path, expression_name)
+                levels = os.listdir(expression_path)
+                for level in levels:
+                    level_path = os.path.join(expression_path, level)
+                    videos = os.listdir(level_path)
+                    for video in videos:
+                        video_path = os.path.join(level_path, video)
+                        video_files.append(video_path)
 
     video_files_dict = {}
     video_files_dict["videos"] = video_files
