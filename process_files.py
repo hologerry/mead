@@ -173,8 +173,8 @@ def create_json_files(extracted_folder="../MEAD_resized_256", processed_folder="
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("""Process the downloaded MEAD tar files""")
     parser.add_argument("op", default="extract", help="operation to perform")
-    parser.add_argument("job_idx", type=int, default=0)
-    parser.add_argument("job_nums", type=int, default=500)
+    parser.add_argument("--job_idx", type=int, default=0)
+    parser.add_argument("--job_nums", type=int, default=500)
 
     args = parser.parse_args()
 

@@ -17,7 +17,7 @@ def read_file(fname):
 
 
 def write_dataset(
-    base="../shards_mead", split="train", video_folder="../MEAD_extracted", processed_folder="../MEAD_processed"
+    base="../shards_mead", split="train", video_folder="../MEAD_resized_256", processed_folder="../MEAD_processed"
 ):
     os.makedirs(base, exist_ok=True)
 
