@@ -43,15 +43,19 @@ def read_file(fname):
 all_keys = set()
 
 
-def write_dataset(base="./shards", split="train", part="mead", video_paths_json=None, sub=False):
+def write_dataset(base="./shards", split="train", video_paths_json=None, sub=False):
     desc = split
     assert os.path.exists(video_paths_json)
+    with open(video_paths_json, "r") as f:
+        video_dict = json.load(f)
+    angle_videos = video_dict["angle_videos"]
+    front_videos = video_dict["front_videos"]
 
     # We shuffle the indexes to make sure that we
     # don't get any large sequences of a single class
     # in the dataset.
-    nvideos = len(videos_names)
-    indexes = list(range(nvideos))
+    n_videos = len(angle_videos)
+    indexes = list(range(n_videos))
     random.shuffle(indexes)
 
     # This is the output pattern under which we write shards.
@@ -63,21 +67,22 @@ def write_dataset(base="./shards", split="train", part="mead", video_paths_json=
 
             # Internal information from the ImageNet dataset
             # instance: the file name and the numerical class.
-            video_file = os.path.join("../TalkingHead-1KH_datasets", split, part, videos_names[i])
+            angle_video_file = os.path.join("../MEAD_extracted", angle_videos[i])
+            front_video_file = os.path.join("../MEAD_extracted", front_videos[i])
 
             # Read the JPEG-compressed image file contents.
-            video = read_file(video_file)
+            angle_video = read_file(angle_video_file)
+            front_video = read_file(front_video_file)
 
             # Construct a unique key from the filename.
-            video_name = videos_names[i].split(".")[0]
-            key = f"{video_name}"
+            key = f"{angle_video_file}"
             # Useful check.
             assert key not in all_keys
             all_keys.add(key)
 
             # Construct a sample.
-            xkey = key if args.file_key else "%09d" % i
-            sample = {"__key__": xkey, "mp4": video}
+            x_key = key if args.file_key else "%09d" % i
+            sample = {"__key__": x_key, "angle_mp4": angle_video, "front_mp4": front_video}
 
             # Write the sample to the sharded tar archives.
             sink.write(sample)
