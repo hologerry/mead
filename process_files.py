@@ -2,6 +2,8 @@ import argparse
 import json
 import os
 
+from multiprocessing import Pool
+
 from tqdm import tqdm
 
 
@@ -18,7 +20,7 @@ def extract_tar(extracted_folder="../MEAD_extracted", downloaded_folder="../MEAD
             if "video" in f:
                 output_path = os.path.join(extracted_folder, id_name + "_" + f.split(".")[0])
                 os.makedirs(output_path, exist_ok=True)
-                cmd = f"tar xf {id_path}/{f} -C {output_path} --strip-components=1"
+                cmd = f"tar xf {id_path}/{f} --strip-components=1 --skip-old-files -C {output_path}"
                 # print(cmd)
                 try:
                     os.system(cmd)
@@ -27,7 +29,40 @@ def extract_tar(extracted_folder="../MEAD_extracted", downloaded_folder="../MEAD
                     print(cmd)
 
 
-def create_json_files(extracted_folder="../MEAD_extracted", processed_folder="../MEAD_processed"):
+def cmd_wrapper(program):
+    out_dir, cmd = program
+    os.makedirs(out_dir, exist_ok=True)
+    os.system(cmd)
+
+
+def resize(
+    job_idx,
+    job_nums,
+    extracted_folder="../MEAD_extracted",
+    processed_folder="../MEAD_processed",
+    resized_folder="../MEAD_resized_256",
+):
+    video_files_json = os.path.join(processed_folder, "video_files.json")
+    with open(video_files_json, "r") as f:
+        video_files_dict = json.load(f)
+    video_files = video_files_dict["videos"]
+
+    video_files_per_job = len(video_files) // job_nums
+
+    current_job_video_files = video_files[job_idx * video_files_per_job : (job_idx + 1) * video_files_per_job]
+
+    programs = []
+    for video_file in current_job_video_files:
+        cmd = f"ffmpeg -y -i {os.path.join(extracted_folder, video_file)} -hide_banner -loglevel error -vf scale=-2:256 {os.path.join(resized_folder, video_file)}"
+        out_dir = os.path.join(resized_folder, os.path.dirname(video_file))
+        programs.append([out_dir, cmd])
+
+    pool = Pool(48)
+    pool.map(cmd_wrapper, programs)
+    pool.close()
+
+
+def create_json_files(extracted_folder="../MEAD_resized_256", processed_folder="../MEAD_processed"):
     os.makedirs(processed_folder, exist_ok=True)
     video_files = []
 
@@ -37,16 +72,17 @@ def create_json_files(extracted_folder="../MEAD_extracted", processed_folder="..
         angle_folders = sorted(os.listdir(id_path))
         for angle_folder in angle_folders:
             angle_path = os.path.join(id_path, angle_folder)
-            expression_folder = os.listdir(angle_path)
+            expression_folder = sorted(os.listdir(angle_path))
             for expression_name in expression_folder:
                 expression_path = os.path.join(angle_path, expression_name)
-                levels = os.listdir(expression_path)
+                levels = sorted(os.listdir(expression_path))
                 for level in levels:
                     level_path = os.path.join(expression_path, level)
-                    videos = os.listdir(level_path)
+                    videos = sorted(os.listdir(level_path))
                     for video in videos:
-                        video_path = os.path.join(level_path, video)
-                        video_files.append(video_path)
+                        # video_path = os.path.join(level_path, video)
+                        relative_path = os.path.join(id_name, angle_folder, expression_name, level, video)
+                        video_files.append(relative_path)
 
     video_files_dict = {}
     video_files_dict["videos"] = video_files
@@ -69,10 +105,22 @@ def create_json_files(extracted_folder="../MEAD_extracted", processed_folder="..
         vf = vf.replace("up", "front")
         pair_front_video_files.append(vf)
 
-    print("number of pair front videos:", len(pair_front_video_files))
+    valid_angle_videos_files = []
+    valid_pair_front_video_files = []
+    for angle_file, front_file in zip(angle_videos_files, pair_front_video_files):
+        if not os.path.exists(os.path.join(extracted_folder, front_file)):
+            continue
+        if not os.path.exists(os.path.join(extracted_folder, front_file)):
+            continue
+        valid_angle_videos_files.append(angle_file)
+        valid_pair_front_video_files.append(front_file)
+
     angle_front_pair_dict = {}
-    angle_front_pair_dict["angle_videos"] = angle_videos_files
-    angle_front_pair_dict["front_videos"] = pair_front_video_files
+    angle_front_pair_dict["angle_videos"] = valid_angle_videos_files
+    angle_front_pair_dict["front_videos"] = valid_pair_front_video_files
+
+    print("number of valid angle videos:", len(valid_angle_videos_files))
+    print("number of valid front videos:", len(valid_pair_front_video_files))
 
     with open(os.path.join(processed_folder, "angle_front_videos.json"), "w") as f:
         json.dump(angle_front_pair_dict, f)
@@ -89,13 +137,13 @@ def create_json_files(extracted_folder="../MEAD_extracted", processed_folder="..
     train_front_videos = []
     val_angle_videos = []
     val_front_videos = []
-    for angle_video in angle_videos_files:
+    for angle_video in valid_angle_videos_files:
         if is_val_video(angle_video):
             val_angle_videos.append(angle_video)
         else:
             train_angle_videos.append(angle_video)
 
-    for front_video in pair_front_video_files:
+    for front_video in valid_pair_front_video_files:
         if is_val_video(front_video):
             val_front_videos.append(front_video)
         else:
@@ -124,11 +172,15 @@ def create_json_files(extracted_folder="../MEAD_extracted", processed_folder="..
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("""Process the downloaded MEAD tar files""")
     parser.add_argument("op", default="extract", help="operation to perform")
+    parser.add_argument("job_idx", type=int, default=0)
+    parser.add_argument("job_num", type=int, default=500)
 
     args = parser.parse_args()
 
     if args.op == "extract":
         extract_tar()
+    elif args.op == "resize":
+        resize(job_idx=args.job_idx, job_num=args.job_num)
     elif args.op == "create":
         create_json_files()
     else:
