@@ -173,14 +173,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("""Process the downloaded MEAD tar files""")
     parser.add_argument("op", default="extract", help="operation to perform")
     parser.add_argument("job_idx", type=int, default=0)
-    parser.add_argument("job_num", type=int, default=500)
+    parser.add_argument("job_nums", type=int, default=500)
 
     args = parser.parse_args()
 
     if args.op == "extract":
         extract_tar()
     elif args.op == "resize":
-        resize(job_idx=args.job_idx, job_num=args.job_num)
+        resize(job_idx=args.job_idx, job_nums=args.job_nums)
     elif args.op == "create":
         create_json_files()
     else:
