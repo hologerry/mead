@@ -16,6 +16,16 @@ def read_file(fname):
         return stream.read()
 
 
+def same_video(angle_file_path, front_file_path):
+    angle_splits = angle_file_path.split("/")
+    front_splits = front_file_path.split("/")
+    for angle_split, front_split in zip(angle_splits, front_splits):
+        if angle_split != front_split and front_split != "front":
+            return False
+
+    return True
+
+
 def write_dataset(
     base="../shards_mead", split="train", video_folder="../MEAD_resized_256", processed_folder="../MEAD_processed"
 ):
@@ -43,6 +53,15 @@ def write_dataset(
     # This is the output pattern under which we write shards.
     pattern = os.path.join(base, f"{split}-%06d.tar")
 
+    # for i in tqdm(indexes, desc=desc):
+
+    #     # Internal information from the ImageNet dataset
+    #     # instance: the file name and the numerical class.
+    #     angle_video_file = os.path.join(video_folder, angle_videos[i])
+    #     front_video_file = os.path.join(video_folder, front_videos[i])
+
+    #     assert same_video(angle_video_file, front_video_file)
+
     # number of shards must bigger than world size
     with wds.ShardWriter(pattern, maxsize=int(args.maxsize), maxcount=int(args.maxcount)) as sink:
         for i in tqdm(indexes, desc=desc):
@@ -51,6 +70,8 @@ def write_dataset(
             # instance: the file name and the numerical class.
             angle_video_file = os.path.join(video_folder, angle_videos[i])
             front_video_file = os.path.join(video_folder, front_videos[i])
+
+            assert same_video(angle_video_file, front_video_file)
 
             # Read the JPEG-compressed image file contents.
             angle_video = read_file(angle_video_file)
