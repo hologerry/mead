@@ -43,11 +43,13 @@ def read_file(fname):
 all_keys = set()
 
 
-def write_dataset(base="./shards", split="train", video_paths_json=None, sub=False):
+def write_dataset(base="./shards", split="train", root_path="../MEAD_processed"):
     desc = split
-    assert os.path.exists(video_paths_json)
-    with open(video_paths_json, "r") as f:
-        video_dict = json.load(f)
+
+    if split == 'train':
+        video_paths_json = os.path.join(root_path, "train_angle_front_pair_videos.json")
+    else:
+        video_paths_json = os.path.join(root_path, "val_angle_front_pair_videos.json")
     angle_videos = video_dict["angle_videos"]
     front_videos = video_dict["front_videos"]
 
@@ -93,12 +95,4 @@ write_dataset(
     base=args.shards,
     split=args.split,
     part=args.part,
-    sub=args.sub,
-    bitrate_json=args.bitrate_json,
-    bitrate_thres=args.bitrate_thres,
-    front_face_json=args.front_face_json,
-    direction_json=args.direction_json,
-    good_video_json=args.good_video_json,
-    good_video_bit_rate_json=args.good_video_bit_rate_json,
-    small_front_json=args.small_front_json,
 )

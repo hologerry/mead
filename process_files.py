@@ -45,8 +45,8 @@ def create_json_files(extracted_folder="../MEAD_extracted", processed_folder="..
                     level_path = os.path.join(expression_path, level)
                     videos = os.listdir(level_path)
                     for video in videos:
-                        video_path = os.path.join(level_path, video)
-                        video_files.append(video_path)
+                        relative_video_path = os.path.join(id_name, angle_folder, expression_name, level, video)
+                        video_files.append(relative_video_path)
 
     video_files_dict = {}
     video_files_dict["videos"] = video_files
