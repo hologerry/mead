@@ -48,6 +48,7 @@ def resize(
     video_files = video_files_dict["videos"]
 
     video_files_per_job = len(video_files) // job_nums
+    print(f"Job {job_idx} needs to process {video_files_per_job} videos")
 
     current_job_video_files = video_files[job_idx * video_files_per_job : (job_idx + 1) * video_files_per_job]
 
