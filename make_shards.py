@@ -85,7 +85,7 @@ def write_dataset(
 
             # Construct a sample.
             x_key = key if args.file_key else "%09d" % i
-            sample = {"__key__": x_key, "angle_mp4": angle_video, "front_mp4": front_video}
+            sample = {"__key__": x_key, "angle.mp4": angle_video, "front.mp4": front_video}
 
             # Write the sample to the shard tar archives.
             sink.write(sample)
@@ -99,7 +99,9 @@ if __name__ == "__main__":
     parser.add_argument("--maxsize", type=float, default=1e10)
     parser.add_argument("--maxcount", type=float, default=1e6)
 
-    parser.add_argument("--shards", default="../shards_mead/", help="directory where shards are written")
+    parser.add_argument(
+        "--shards", default="../MEAD_processed/shards_mead/", help="directory where shards are written"
+    )
 
     args = parser.parse_args()
 
