@@ -32,6 +32,7 @@ def main(job_idx, num_jobs, threads):
     for video in tqdm(cur_job_videos):
         video_path = os.path.join(videos_folder, video)
         out_dir = os.path.join(frames_folder, video.split(".")[0])
+        out_dir = out_dir.replace("video", "frames")
         os.makedirs(out_dir, exist_ok=True)
         cmd = f"ffmpeg -i {video_path} -hide_banner -loglevel error -qscale:v 1 -qmin 1 -qmax 1 -vsync 0 {out_dir}/%06d.png"
         programs.append(cmd)

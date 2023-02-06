@@ -33,14 +33,6 @@ def write_dataset(
 
     all_keys = set()
 
-
-def write_dataset(base="./shards", split="train", root_path="../MEAD_processed"):
-    desc = split
-
-    if split == 'train':
-        video_paths_json = os.path.join(root_path, "train_angle_front_pair_videos.json")
-    else:
-        video_paths_json = os.path.join(root_path, "val_angle_front_pair_videos.json")
     if split == "train":
         video_json = os.path.join(processed_folder, "train_angle_front_pair_videos.json")
     else:
@@ -71,7 +63,7 @@ def write_dataset(base="./shards", split="train", root_path="../MEAD_processed")
 
     # number of shards must bigger than world size
     with wds.ShardWriter(pattern, maxsize=int(args.maxsize), maxcount=int(args.maxcount)) as sink:
-        for i in tqdm(indexes, desc=desc):
+        for i in tqdm(indexes):
 
             # Internal information from the ImageNet dataset
             # instance: the file name and the numerical class.
