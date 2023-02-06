@@ -9,30 +9,6 @@ import webdataset as wds
 from tqdm import tqdm
 
 
-parser = argparse.ArgumentParser("""Generate sharded dataset from original ImageNet data.""")
-parser.add_argument("--split", default="train", help="which splits to write")
-parser.add_argument("--part", default="cropped_clips_256", help="which part to write")
-parser.add_argument("--file_key", action="store_true", help="use file as key (default: index)")
-parser.add_argument("--max_size", type=float, default=5e8)
-parser.add_argument("--max_count", type=float, default=100000)
-parser.add_argument("--shards", default="shards/", help="directory where shards are written")
-parser.add_argument("--data_process_type", type=str, default="raw")
-parser.add_argument("--bitrate_json", type=str, default=None)
-parser.add_argument("--front_face_json", type=str, default=None)
-parser.add_argument("--direction_json", type=str, default=None)
-parser.add_argument("--good_video_json", type=str, default=None)
-parser.add_argument("--good_video_bit_rate_json", type=str, default=None)
-parser.add_argument("--small_front_json", type=str, default=None)
-parser.add_argument("--bitrate_thres", type=int, default=128)
-parser.add_argument("--debug", action="store_true")
-parser.add_argument("--sub", action="store_true")
-
-args = parser.parse_args()
-
-
-os.makedirs(args.shards, exist_ok=True)
-
-
 def read_file(fname):
     "Read a binary file from disk."
     os.path.exists(fname)
@@ -40,7 +16,22 @@ def read_file(fname):
         return stream.read()
 
 
-all_keys = set()
+def same_video(angle_file_path, front_file_path):
+    angle_splits = angle_file_path.split("/")
+    front_splits = front_file_path.split("/")
+    for angle_split, front_split in zip(angle_splits, front_splits):
+        if angle_split != front_split and front_split != "front":
+            return False
+
+    return True
+
+
+def write_dataset(
+    base="../shards_mead", split="train", video_folder="../MEAD_resized_256", processed_folder="../MEAD_processed"
+):
+    os.makedirs(base, exist_ok=True)
+
+    all_keys = set()
 
 
 def write_dataset(base="./shards", split="train", root_path="../MEAD_processed"):
@@ -50,6 +41,12 @@ def write_dataset(base="./shards", split="train", root_path="../MEAD_processed")
         video_paths_json = os.path.join(root_path, "train_angle_front_pair_videos.json")
     else:
         video_paths_json = os.path.join(root_path, "val_angle_front_pair_videos.json")
+    if split == "train":
+        video_json = os.path.join(processed_folder, "train_angle_front_pair_videos.json")
+    else:
+        video_json = os.path.join(processed_folder, "val_angle_front_pair_videos.json")
+    with open(video_json, "r") as f:
+        video_dict = json.load(f)
     angle_videos = video_dict["angle_videos"]
     front_videos = video_dict["front_videos"]
 
@@ -63,14 +60,25 @@ def write_dataset(base="./shards", split="train", root_path="../MEAD_processed")
     # This is the output pattern under which we write shards.
     pattern = os.path.join(base, f"{split}-%06d.tar")
 
+    # for i in tqdm(indexes, desc=desc):
+
+    #     # Internal information from the ImageNet dataset
+    #     # instance: the file name and the numerical class.
+    #     angle_video_file = os.path.join(video_folder, angle_videos[i])
+    #     front_video_file = os.path.join(video_folder, front_videos[i])
+
+    #     assert same_video(angle_video_file, front_video_file)
+
     # number of shards must bigger than world size
-    with wds.ShardWriter(pattern, max_size=int(args.max_size), max_count=int(args.max_count)) as sink:
+    with wds.ShardWriter(pattern, maxsize=int(args.maxsize), maxcount=int(args.maxcount)) as sink:
         for i in tqdm(indexes, desc=desc):
 
             # Internal information from the ImageNet dataset
             # instance: the file name and the numerical class.
-            angle_video_file = os.path.join("../MEAD_extracted", angle_videos[i])
-            front_video_file = os.path.join("../MEAD_extracted", front_videos[i])
+            angle_video_file = os.path.join(video_folder, angle_videos[i])
+            front_video_file = os.path.join(video_folder, front_videos[i])
+
+            assert same_video(angle_video_file, front_video_file)
 
             # Read the JPEG-compressed image file contents.
             angle_video = read_file(angle_video_file)
@@ -84,15 +92,27 @@ def write_dataset(base="./shards", split="train", root_path="../MEAD_processed")
 
             # Construct a sample.
             x_key = key if args.file_key else "%09d" % i
-            sample = {"__key__": x_key, "angle_mp4": angle_video, "front_mp4": front_video}
+            sample = {"__key__": x_key, "angle.mp4": angle_video, "front.mp4": front_video}
 
-            # Write the sample to the sharded tar archives.
+            # Write the sample to the shard tar archives.
             sink.write(sample)
 
 
-print("# split", args.split)
-write_dataset(
-    base=args.shards,
-    split=args.split,
-    part=args.part,
-)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser("""Generate shard dataset from original ImageNet data.""")
+    parser.add_argument("--split", default="train", help="which splits to write")
+
+    parser.add_argument("--file_key", action="store_true", help="use file as key (default: index)")
+    parser.add_argument("--maxsize", type=float, default=1e10)
+    parser.add_argument("--maxcount", type=float, default=1e6)
+
+    parser.add_argument(
+        "--shards", default="../MEAD_processed/shards_mead/", help="directory where shards are written"
+    )
+
+    args = parser.parse_args()
+
+    write_dataset(
+        base=args.shards,
+        split=args.split,
+    )
