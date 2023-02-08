@@ -65,17 +65,18 @@ def main_pool(job_idx, num_jobs, threads):
         cmd = f"ffmpeg -y -i {video_path} -hide_banner -loglevel error -qscale:v 1 -qmin 1 -qmax 1 -vsync 0 -vf scale=-1:256 {out_dir}/%06d.png"
         programs.append(cmd)
 
-    bar = tqdm(total=len(programs))
+    # bar = tqdm(total=len(programs))
 
     def do_work(cmd):
         os.system(cmd)
-        bar.update(1)
+        # bar.update(1)
 
     pool = Pool(threads)
-    pool.imap_unordered(do_work, programs)
-    pool.close()
-    pool.join()
-    bar.close()
+    # pool.imap_unordered(do_work, programs)
+    # pool.close()
+    # pool.join()
+    # bar.close()
+    tqdm.tqdm(pool.imap_unordered(do_work, programs), total=len(programs))
 
 
 if __name__ == "__main__":
