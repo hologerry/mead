@@ -67,7 +67,7 @@ def main_pool(job_idx, num_jobs, threads):
 
     bar = tqdm(total=len(programs))
 
-    def do_work(x):
+    def do_work(cmd):
         os.system(cmd)
         bar.update(1)
 
