@@ -64,7 +64,7 @@ def main_pool(job_idx, num_jobs, threads):
         out_dir = os.path.join(frames_folder, video.split(".")[0])
         out_dir = out_dir.replace("video", "frames")
         os.makedirs(out_dir, exist_ok=True)
-        cmd = f"ffmpeg -y -i {video_path} -hide_banner -loglevel error -qscale:v 1 -qmin 1 -qmax 1 -vsync 0 {out_dir}/%06d.png"
+        cmd = f"ffmpeg -y -i {video_path} -hide_banner -loglevel error -vf scale=-1:256 -qscale:v 1 -qmin 1 -qmax 1 -vsync 0 {out_dir}/%06d.png"
         programs.append(cmd)
 
     pool = Pool(threads)
