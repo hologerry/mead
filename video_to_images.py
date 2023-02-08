@@ -76,7 +76,7 @@ def main_pool(job_idx, num_jobs, threads):
     # pool.close()
     # pool.join()
     # bar.close()
-    tqdm.tqdm(pool.imap_unordered(do_work, programs), total=len(programs))
+    tqdm(pool.imap_unordered(do_work, programs), total=len(programs))
 
 
 if __name__ == "__main__":
