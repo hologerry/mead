@@ -22,7 +22,9 @@ total_videos = len(videos)
 print("total videos:", total_videos)
 
 
-def cmd_wrapper(cmd):
+def cmd_wrapper(program):
+    out_dir, cmd = program
+    os.makedirs(out_dir, exist_ok=True)
     os.system(cmd)
 
 
@@ -63,9 +65,9 @@ def main_pool(job_idx, num_jobs, threads):
         video_path = os.path.join(videos_folder, video)
         out_dir = os.path.join(frames_folder, video.split(".")[0])
         out_dir = out_dir.replace("video", "frames")
-        os.makedirs(out_dir, exist_ok=True)
+        # os.makedirs(out_dir, exist_ok=True)
         cmd = f"ffmpeg -y -i {video_path} -hide_banner -loglevel error -qscale:v 1 -qmin 1 -qmax 1 -vsync 0 -vf scale=-1:256 {out_dir}/%06d.png"
-        programs.append(cmd)
+        programs.append([out_dir, cmd])
 
     pool = Pool(threads)
     for _ in tqdm(pool.imap_unordered(cmd_wrapper, programs), total=len(programs), desc="running commands"):
