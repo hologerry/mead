@@ -8,8 +8,10 @@ from multiprocessing import Pool
 from tqdm import tqdm
 
 
-def cmd_wrapper(cmd):
+def cmd_wrapper(cmd, pbar=None):
     os.system(cmd)
+    if pbar is not None:
+        pbar.update(1)
 
 
 videos_folder = "../MEAD_extracted"
@@ -66,9 +68,9 @@ def main_pool(job_idx, num_jobs, threads):
         os.makedirs(out_dir, exist_ok=True)
         cmd = f"ffmpeg -y -i {video_path} -hide_banner -loglevel error -vf scale=-1:256 -qscale:v 1 -qmin 1 -qmax 1 -vsync 0 {out_dir}/%06d.png"
         programs.append(cmd)
-
+    pbar = tqdm(total=len(programs))
     pool = Pool(threads)
-    pool.map(cmd_wrapper, programs)
+    pool.map(cmd_wrapper, programs, pbar)
     pool.close()
 
 
