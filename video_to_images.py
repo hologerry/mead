@@ -55,11 +55,30 @@ def main(job_idx, num_jobs, threads):
         p.join()
 
 
+def main_pool(job_idx, num_jobs, threads):
+    cur_job_videos = videos[job_idx::num_jobs]
+
+    programs = []
+    for video in cur_job_videos:
+        video_path = os.path.join(videos_folder, video)
+        out_dir = os.path.join(frames_folder, video.split(".")[0])
+        out_dir = out_dir.replace("video", "frames")
+        os.makedirs(out_dir, exist_ok=True)
+        cmd = f"ffmpeg -y -i {video_path} -hide_banner -loglevel error -qscale:v 1 -qmin 1 -qmax 1 -vsync 0 {out_dir}/%06d.png"
+        programs.append(cmd)
+
+    pool = Pool(threads)
+    pool.map(cmd_wrapper, programs)
+    pool.close()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("""Process the downloaded MEAD tar files""")
     parser.add_argument("--job_idx", type=int, default=0)
     parser.add_argument("--num_jobs", type=int, default=1)
     parser.add_argument("--threads", type=int, default=48)
+    parser.add_argument("--pool", action="store_true")
 
     args = parser.parse_args()
-    main(args.job_idx, args.num_jobs, args.threads)
+    func = main_pool if args.pool else main
+    func(args.job_idx, args.num_jobs, args.threads)
