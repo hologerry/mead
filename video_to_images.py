@@ -61,7 +61,7 @@ def main_pool(job_idx, num_jobs, threads):
     cur_job_videos = videos[job_idx::num_jobs]
 
     programs = []
-    for video in cur_job_videos:
+    for video in tqdm(cur_job_videos):
         video_path = os.path.join(videos_folder, video)
         out_dir = os.path.join(frames_folder, video.split(".")[0])
         out_dir = out_dir.replace("video", "frames")
@@ -70,8 +70,10 @@ def main_pool(job_idx, num_jobs, threads):
         programs.append(cmd)
     pbar = tqdm(total=len(programs))
     pool = Pool(threads)
-    pool.map(cmd_wrapper, programs, pbar)
+    pool.imap_unordered(cmd_wrapper, programs, pbar)
     pool.close()
+    pool.join()
+    pbar.close()
 
 
 if __name__ == "__main__":
