@@ -8,12 +8,6 @@ from multiprocessing import Pool
 from tqdm import tqdm
 
 
-def cmd_wrapper(cmd, pbar=None):
-    os.system(cmd)
-    if pbar is not None:
-        pbar.update(1)
-
-
 videos_folder = "../MEAD_extracted"
 frames_folder = "../MEAD_frames"
 processed_folder = "../MEAD_processed"
@@ -29,6 +23,8 @@ print("total videos:", total_videos)
 
 
 def main(job_idx, num_jobs, threads):
+    def cmd_wrapper(cmd):
+        os.system(cmd)
 
     cur_job_videos = videos[job_idx::num_jobs]
     one_process_jobs = len(cur_job_videos) // threads + 1
@@ -68,12 +64,18 @@ def main_pool(job_idx, num_jobs, threads):
         os.makedirs(out_dir, exist_ok=True)
         cmd = f"ffmpeg -y -i {video_path} -hide_banner -loglevel error -vf scale=-1:256 -qscale:v 1 -qmin 1 -qmax 1 -vsync 0 {out_dir}/%06d.png"
         programs.append(cmd)
-    pbar = tqdm(total=len(programs))
+
+    bar = tqdm(total=len(programs))
+
+    def do_work(x):
+        os.system(cmd)
+        bar.update(1)
+
     pool = Pool(threads)
-    pool.imap_unordered(cmd_wrapper, programs, pbar)
+    pool.imap_unordered(do_work, programs)
     pool.close()
     pool.join()
-    pbar.close()
+    bar.close()
 
 
 if __name__ == "__main__":
