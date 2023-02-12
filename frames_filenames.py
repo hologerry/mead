@@ -101,7 +101,7 @@ def main(args):
                             except:
                                 continue
 
-        cur_id_all_frame_path = os.path.join(mead_data_out_root, id_name, "all_frames.json")
+        cur_id_all_frame_path = os.path.join(mead_data_out_root, f"{id_name}_frames.json")
         with open(cur_id_all_frame_path, "w") as f:
             json.dump(cur_id_all_frames, f)
 
