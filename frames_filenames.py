@@ -66,7 +66,7 @@ id_names = [
 
 
 def main(args):
-    cur_job_id_names = id_names[args.job_idx :: args.num_jobs]
+    cur_job_id_names = id_names[args.job_idx :: args.job_nums]
     for id_name in tqdm(cur_job_id_names, desc="cur_job_id_names", total=len(cur_job_id_names), leave=False):
         cmd = "export AZCOPY_CRED_TYPE=Anonymous;"
         cmd += "export AZCOPY_CONCURRENCY_VALUE=AUTO;"
