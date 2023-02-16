@@ -74,7 +74,7 @@ def main(args):
 
     cmd = "export AZCOPY_CRED_TYPE=Anonymous;"
     cmd += "export AZCOPY_CONCURRENCY_VALUE=AUTO;"
-    cmd += f"./azcopy copy 'https://msramcg.blob.core.windows.net/yuegao/Front/data/MEAD_frames/{id_name}/?sv=2021-10-04&st=2023-02-16T07%3A46%3A47Z&se=2023-02-23T07%3A46%3A47Z&sr=c&sp=rlt&sig=XZOiVLlO1n7BYZnHyv3JeP15yQEOnVUHg10zjtLXo3s%3D' '{shm_data_root}' --overwrite=true --check-md5 FailIfDifferent --from-to=BlobLocal --recursive --log-level=NONE;"
+    cmd += f"./azcopy list 'https://msramcg.blob.core.windows.net/yuegao/Front/data/MEAD_frames/{id_name}/?sv=2021-10-04&st=2023-02-16T07%3A46%3A47Z&se=2023-02-23T07%3A46%3A47Z&sr=c&sp=rlt&sig=XZOiVLlO1n7BYZnHyv3JeP15yQEOnVUHg10zjtLXo3s%3D' --mega-units "
     cmd += f"./azcopy copy 'https://msramcg.blob.core.windows.net/yuegao/Front/data/MEAD_frames/{id_name}/?sv=2021-10-04&st=2023-02-16T07%3A46%3A47Z&se=2023-02-23T07%3A46%3A47Z&sr=c&sp=rlt&sig=XZOiVLlO1n7BYZnHyv3JeP15yQEOnVUHg10zjtLXo3s%3D' 'https://msramcgvisionfte.blob.core.windows.net/yuegao/Front/data/MEAD_frames/?sv=2021-10-04&se=2023-03-18T08%3A01%3A50Z&sr=c&sp=rwlt&sig=s6dPeUmnlR65HS1cByjOsI%2FfaYUyN5Q4eEv%2BPTGaQ%2FM%3D' --overwrite=true --from-to=BlobBlob --s2s-preserve-access-tier=false --check-length=true --include-directory-stub=false --s2s-preserve-blob-tags=false --recursive --log-level=NONE;"
     cmd += "unset AZCOPY_CRED_TYPE;"
     cmd += "unset AZCOPY_CONCURRENCY_VALUE;"
