@@ -9,7 +9,7 @@ import cv2
 from tqdm import tqdm
 
 
-shm_data_root = "/shm/MEAD_frames"
+shm_data_root = "/dev/shm/MEAD_frames"
 os.makedirs(shm_data_root, exist_ok=True)
 
 
